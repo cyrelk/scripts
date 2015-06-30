@@ -1,0 +1,58 @@
+#!/bin/bash
+
+set -e
+
+USER=$1
+CONTAINER=$2
+IP=$3 # address/mask
+GW=$4 # address
+NAMESERVER=$5
+
+CGM="/usr/bin/cgm"
+SU="/bin/su"
+
+#
+# LXC parameters
+#
+
+if ! grep $USER /etc/lxc/lxc-usernet > /dev/null 2>&1; then
+    echo "$USER br0 10" >> /etc/lxc/lxc-usernet
+fi
+
+mkdir -p /home/${USER}/.cache/lxc
+mkdir -p /home/${USER}/.config/lxc
+mkdir -p /home/${USER}/.local/share/lxc/
+
+if [ ! -f /home/${USER}/.config/lxc/default.conf ]; then
+cat > /home/${USER}/.config/lxc/default.conf <<EOF
+lxc.network.type = veth
+lxc.network.link = br0
+lxc.network.flags = up
+#lxc.network.hwaddr = 00:16:3e:xx:xx:xx
+lxc.id_map = u 0 820896 65536
+lxc.id_map = g 0 820896 65536
+EOF
+fi
+
+#
+# Group creation
+#
+
+$CGM create all $CONTAINER
+$CGM chown all $CONTAINER $(/usr/bin/id -u $USER) $(/usr/bin/id -g $USER)
+
+#
+# Container creation as the newly created user
+#
+
+command="cgm movepid all $CONTAINER $$; lxc-create ..."
+$SU -u mezzapp -c $command
+
+cat >> /home/${USER}/.local/share/lxc/${CONTAINER}/config <<EOF
+lxc.network.ipv4 = $IP
+lxc.network.ipv4.gateway = $GW
+EOF
+
+# deletion of the dhclient from the container
+# lxc-nsuserexec echo|cat|whatever /home/$USER...
+# if root does that lxc-userrnsexec is not necessary

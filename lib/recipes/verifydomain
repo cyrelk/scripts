@@ -1,0 +1,17 @@
+verifydomain () {
+    echo " --verifydomain "
+
+    set +e
+
+    /usr/bin/host ${domainname}.ezmash.me > /dev/null 2>&1
+
+    if [ "$?" = "1" ]; then
+        echo "domain does not exist";
+        exit 0
+    fi
+
+    set -e
+
+    echo "domain already exists"
+    exit 1
+}

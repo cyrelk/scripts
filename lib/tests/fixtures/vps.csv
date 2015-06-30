@@ -1,0 +1,5 @@
+# id; vpsname; vpsdomain; macaddr; ipv4addr; ipv6addr; ipv4gw; ipv6gw; memory; disk
+1;user1;user1.mezzapp.com;52:54:00:12:34:56;10.10.10.1;[::1],10.10.10.254,[::1];512,8
+2;user2;user2.mezzapp.com;52:54:00:12:34:57;10.10.10.2;[::1],10.10.10.254,[::1];256,8
+3;user3;user3.mezzapp.com;52:54:00:12:34:58;10.10.10.3;[::1],10.10.10.254,[::1];512,8
+4;user4;user4.mezzapp.com;52:54:00:12:34:59;10.10.10.4;[::1],10.10.10.254,[::1];768,12

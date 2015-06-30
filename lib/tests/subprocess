@@ -1,0 +1,26 @@
+#!/usr/bin/env node
+// -*- mode: Javascript; -*-
+
+var spawn = require('child_process').spawn;
+
+var Command = function() {
+    var _cmd = '';
+};
+
+Command.prototype = {
+    get command() { return this._cmd; },
+    set command(value) { this._cmd = value; },
+    execute : function(parameters) {
+        var _c = spawn(this._cmd, parameters);
+
+        _c.stdout.on('data', function(data) {
+            console.log(data.toString());
+        });
+    }
+};
+
+
+var command = new Command();
+command.command = 'ls';
+console.log(command.command);
+command.execute(['-al']);

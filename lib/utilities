@@ -1,0 +1,232 @@
+#
+# colors from ArchLinux
+#
+
+# Reset
+Color_Off='\e[0m'       # Text Reset
+
+# Regular Colors
+Black='\e[0;30m'        # Black
+Red='\e[0;31m'          # Red
+Green='\e[0;32m'        # Green
+Yellow='\e[0;33m'       # Yellow
+Blue='\e[0;34m'         # Blue
+Purple='\e[0;35m'       # Purple
+Cyan='\e[0;36m'         # Cyan
+White='\e[0;37m'        # White
+
+# Bold
+BBlack='\e[1;30m'       # Black
+BRed='\e[1;31m'         # Red
+BGreen='\e[1;32m'       # Green
+BYellow='\e[1;33m'      # Yellow
+BBlue='\e[1;34m'        # Blue
+BPurple='\e[1;35m'      # Purple
+BCyan='\e[1;36m'        # Cyan
+BWhite='\e[1;37m'       # White
+
+# Underline
+UBlack='\e[4;30m'       # Black
+URed='\e[4;31m'         # Red
+UGreen='\e[4;32m'       # Green
+UYellow='\e[4;33m'      # Yellow
+UBlue='\e[4;34m'        # Blue
+UPurple='\e[4;35m'      # Purple
+UCyan='\e[4;36m'        # Cyan
+UWhite='\e[4;37m'       # White
+
+# Background
+On_Black='\e[40m'       # Black
+On_Red='\e[41m'         # Red
+On_Green='\e[42m'       # Green
+On_Yellow='\e[43m'      # Yellow
+On_Blue='\e[44m'        # Blue
+On_Purple='\e[45m'      # Purple
+On_Cyan='\e[46m'        # Cyan
+On_White='\e[47m'       # White
+
+# High Intensity
+IBlack='\e[0;90m'       # Black
+IRed='\e[0;91m'         # Red
+IGreen='\e[0;92m'       # Green
+IYellow='\e[0;93m'      # Yellow
+IBlue='\e[0;94m'        # Blue
+IPurple='\e[0;95m'      # Purple
+ICyan='\e[0;96m'        # Cyan
+IWhite='\e[0;97m'       # White
+
+# Bold High Intensity
+BIBlack='\e[1;90m'      # Black
+BIRed='\e[1;91m'        # Red
+BIGreen='\e[1;92m'      # Green
+BIYellow='\e[1;93m'     # Yellow
+BIBlue='\e[1;94m'       # Blue
+BIPurple='\e[1;95m'     # Purple
+BICyan='\e[1;96m'       # Cyan
+BIWhite='\e[1;97m'      # White
+
+# High Intensity backgrounds
+On_IBlack='\e[0;100m'   # Black
+On_IRed='\e[0;101m'     # Red
+On_IGreen='\e[0;102m'   # Green
+On_IYellow='\e[0;103m'  # Yellow
+On_IBlue='\e[0;104m'    # Blue
+On_IPurple='\e[0;105m'  # Purple
+On_ICyan='\e[0;106m'    # Cyan
+On_IWhite='\e[0;107m'   # White
+
+#
+# Utilities routines
+#
+
+
+debug () {
+    if [ -n "$__DEBUG__" ]; then
+        echo $@
+    fi
+}
+
+_print_separator() {
+    echo -e $White
+    for i in $(seq ${#1}); do echo -n "="; done;
+    echo -e "$Color_Off"
+}
+
+print_banner() {
+    local _message=$1
+    _print_separator "$_message"
+    echo -n "$_message"
+    _print_separator "$_message"
+}
+
+
+#
+# a routine able to parse .ini configuration files
+#
+#  to use it source it inside the client script then
+# call 'load_config inifile' and use the resulting
+# ${config[]} variable, it's an associative array.
+# each section of the .ini file is append with each
+# of its keys with an underscore.
+#
+#  for example the .ini file containing the following
+# section:
+#
+# [Section1]
+#    key1 = value1 # this is a comment
+#    key2 = value2
+#
+# will be readable, after using this script, by doing
+# the following:
+#
+# value=${config[Section1_key1]}
+#
+#  'echo ${config[*]}' will display all the values of
+# the array but not the keys.
+
+declare -A config
+
+read_configuration () {
+    local configfile=$1
+    local section
+    local key
+    local value
+
+    # FIXME: we need to evalute ';' as a comment character
+    #        see if we can use something different than '_'
+    #        to link between sections and keys.
+    while read line
+    do
+        echo "------"
+        echo $line
+        if [ "${line:0:1}" = "[" ]; then
+            section="${line%%]*}"
+            section="${section#[}"
+            continue
+        fi
+        if [ -n "${line%%#*}" ]; then
+            key="${line%%=*}"
+            key="${key%% *}" # removing trailing spaces
+            value="${line##*=}"
+            value="${value%%#*}"
+            value="${value#* }" # removing heading spaces
+            echo ${section}_${key}"::"$value
+            config["${section}_${key}"]=$value
+            echo ">>>"${config["${section}_${key}"]}
+        fi
+    done < $configfile
+}
+
+# end of read_configuration
+
+# make sure that all the variables are defined in the configuration file
+validate_configuration () {
+    debug "  validate_configuration"
+    if [ -z "${CONFFILE}" ]; then
+        return 0
+    fi
+    for var in $* ; do
+        eval value=\$$var
+        if [ "$value" = "" ]; then
+            echo " - $var has not been defined in ${CONFFILE}; exiting..."
+            exit 1
+        fi
+    done
+}
+
+# verifies that all the hosts used by the script are available
+#  we can use ping only because the Debian bash version does not
+#  support /dev/tcp/* and /dev/udp/* files.
+verify_hosts () {
+    debug "  verify_hosts"
+    for machine in $* ; do
+        ping -q -c 3 $machine
+        if [ $? != 0 ] ; then
+            echo " - $machine seems to not be online; exiting..."
+            exit 1
+        fi
+    done
+}
+
+opened () {
+    local service=$1
+
+    # FIXME: ouch heavy!!!
+    local actives=$(netstat -tuln | sed -e 's/[ ]\+/ /g' | cut -d' ' -f'1,4' | tr ' ' '/')
+    local services=$(for active in $actives; do echo ${active%%/*}/${active##*:} ; done)
+
+    for s in $services; do
+        if [ "$s" = "$service" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+verify_services () {
+    debug "  verify_services"
+    for service in $* ; do
+        if ! opened $service ; then
+            echo " - $service seems down; exiting..."
+            exit 1
+        fi
+    done
+}
+
+#  this routine pushes a script over SSH and run it as a sudoer
+# on the remote machine. /etc/sudoers should be set as something like:
+#         "user machine = NOPASSWD: /tmp/script"
+# "user" should be exclusive and accessible from any other machine's users
+# this "user" could belongs to the "operator" group
+push_and_run () {
+    debug "  push_and_run"
+
+    local command=$1
+    local host=$2
+
+    scp -p $command $host:/tmp/${command}
+    ssh $host "sudo /tmp/${command}"
+    ssh $host "rm -f /tmp/${command}"
+}
+
+return 0

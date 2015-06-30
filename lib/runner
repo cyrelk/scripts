@@ -1,0 +1,35 @@
+#!/bin/bash
+
+#  this script is responsible for running recipes by following
+# instructions stored in a database.
+#  runner should read one line from a database and execute the script
+# with parameters whose values are defined in that line. Then the
+# script should write a value into that record to indicate that
+# the work asked to be done has been correctly completed or not.
+#  Then the runner should read the following line and the processus
+# to go on until the last record from the set.
+#  runner should be able to run script both locally and remotely.
+
+source ./utilities
+
+# all routines there
+
+_usage () {
+:
+}
+
+_initargs () {
+:
+}
+
+_validateargs () {
+:
+}
+
+_run () {
+:
+}
+
+source ./base
+
+run $@

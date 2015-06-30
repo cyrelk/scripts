@@ -1,0 +1,2 @@
+# contains symbolic links to the tools used to manage the containers.
+# the tools themselves are stored inside /lib/

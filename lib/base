@@ -1,0 +1,184 @@
+#!/bin/bash
+# Author : <cyril.elkaim@free.fr>
+
+#
+# a template to build Shell scripts upon
+#
+#  this file must be sourced twice into the client script.
+# The client script must have defined all the routines
+# beginning with an underscore beforehand before sourcing
+# this script the second time. the source command:
+# '. utilities' should be done near the beginning
+# of the client script to load miscellaneous routines.
+#
+# the usage sequence in a client script is as follows:
+#
+#  source utilities
+#  ...script code defining '_*' routines used by base...
+#  source base
+#  initargs option1 option2: option3:: ...
+#  initcommands command1 command2 command3 ...
+#  run $@
+#
+# where the options follow the getopt syntax
+#
+# the _* routines that must be defined by the client script are:
+# _usage : displays a text explaining the purpose and call method
+# _initargs : to initialize any command and parameters
+# _validateargs : to verify that the parameters are correct
+# _run : the main routine
+#
+# in shell scripts all global variables in UPPERCASE are CONSTANTS
+# modifiable global variables should be named in lowercase
+# ok, ok, I don't really follow my own rules here...
+#
+
+
+usage () {
+    _usage "$@"
+}
+
+CELOPTIONS=""
+declare -a CELVARS              # contains the names of the variables
+declare -a CELARGS              # contains the presence of ":" arguments
+declare -a CELCMDS              # contains the name of the authorized commands
+
+# called with the list of the desired parameters like this:
+#  initargs login password email domainame
+initargs () {
+    debug " - initargs: $# $@"
+
+    _initargs
+
+    CELOPTIONS=""
+
+    local arg
+
+    for arg in $( seq $# ); do
+        CELVARS[$arg]=${1%%:*}
+        CELARGS[$arg]=${1##${CELVARS[$arg]}}
+        CELOPTIONS="${CELOPTIONS}${1},"
+        shift
+    done
+}
+
+initcommands () {
+    debug " - initcommands: $# $@"
+
+    local arg
+
+    for arg in $( seq $# ); do
+        CELCMDS[$arg]=${1}
+        shift
+    done
+}
+
+_verifycommand () {
+    local var
+
+    for var in $( seq ${#CELCMDS[@]} ); do
+        if [ "$1" = "${CELCMDS[$var]}" ]; then
+            echo "ok"
+            return
+        fi
+    done
+    echo "nonexistent"
+}
+
+# returns the type of argument for this option
+_optarg () {
+    local var
+    for var in $( seq ${#CELVARS[@]} ); do
+        if [ "${CELVARS[$var]}" = "$name" ]; then
+            # this echo is the return value!
+            echo ${CELARGS[$var]}
+            break
+        fi
+    done
+    return 0
+}
+
+# a sample options string may be (note that -o options are _mandatory_):
+# "-ohl:p:e:d: --long help,login:,password:,email:,domainame:"
+# all arguments that will not start with an hyphen will
+#  be considered commands in our case
+#  we use long name options only because we want to use these names
+#  as variables names.
+# once this routine is executed a set of variables are created.
+#  all the options have their name given to variables with argument values.
+#  the command has its name given to a variable prefixed by '_'
+# *note*: two parameters are a little bit specific: --help and --syslog
+#  they are used like any other arguments but have special meaning in template
+#  I say that just to remember them :)
+parseargs () {
+    debug " - parseargs"
+
+    local optarg
+    local args
+    local name
+    local command
+
+    args=$( getopt -oh --long $CELOPTIONS -- "$@" )
+
+    eval set -- "$args"
+
+    command=false
+    while true ; do
+        if [[ "$1" == "--" || $command == true ]]; then
+            if [ $command = false ]; then
+                # we do this shift only before the first command
+                shift
+            fi
+            command=true
+            if [ -z $1 ]; then
+                # no more commands, so we exit the loop
+                break
+            fi
+            if [ "$( _verifycommand $1 )" = "nonexistent" ]; then
+                usage "$1 is not an existing command"
+                exit 1
+            fi
+            eval "_${1}=1"
+        fi
+        name=${1##--}
+        optarg=$( _optarg $name )
+        # echo $name ">>" $optarg
+        if [[ "$optarg" == "::" || "$optarg" == ":" ]]; then
+            shift
+            eval "${name}=$1"
+        else
+            # options without argument are set to true if given
+            eval "${name}=1"
+        fi
+        shift
+    done
+
+    if [ $help = 1 ]; then
+        usage
+        exit 0
+    fi
+
+    return 0
+}
+
+validateargs () {
+    debug " - validateargs"
+
+    _validateargs
+}
+
+run () {
+
+    parseargs $@
+
+    validateargs
+
+    if [ -n "$syslog" -a $syslog = 1 ]; then
+        _run 2>&1 | logger -t $SCRIPT
+    else
+        _run
+    fi
+
+    debug " -- exiting"
+
+}

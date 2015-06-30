@@ -1,0 +1,3 @@
+# contains the symbolic links to the tools used to manage the cells themselves.
+#  the tools are stored into /lib/. Usually this tools are the one used by 'root',
+# everything else should go to /bin/

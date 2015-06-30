@@ -1,0 +1,21 @@
+_createphpwrapper () {
+    cat > /home/${login}/cgi-bin/php-wrapper <<EOF
+#!/bin/sh
+
+export PATH=/usr/bin:/bin/
+exec /usr/bin/php5-cgi --php-ini /etc/php.ini \$@
+EOF
+
+    chmod +x /home/${login}/cgi-bin/php-wrapper
+}
+
+_createjswrapper () {
+    cat > /home/${login}/cgi-bin/js-wrapper <<EOF
+#!/bin/sh
+
+export PATH=/usr/bin:/bin
+exec /usr/bin/v8cgi $@
+EOF
+
+    chmod +x /home/${login}/cgi-bin/js-wrapper
+}

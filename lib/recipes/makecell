@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# scriptname: makecell
+# author: Cyril Elkaim <celkaim@mezzapp.com>
+
+#  a script to configure a physical machine ,a cell,
+# which will be used to run LXC containers.
+# this script should be launched by /lib/runner.
+# TODO: design scripts to be runnable as pipes
+
+set -e
+
+source ../utilities
+
+add_packages () {
+    apt-get update
+    apt-get install sudo tmux htop multitail emacs23-nox lxc lxctl
+}
+
+configure_lxc () {
+    cat "cgroup  /sys/fs/cgroup  cgroup  defaults  0  0" >> /etc/fstab
+}
+
+source ../base
+
+initargs a b c
+
+initcommands a b c
+
+run $@

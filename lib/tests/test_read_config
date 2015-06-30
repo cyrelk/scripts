@@ -1,0 +1,14 @@
+#!/bin/bash
+
+source ../utilities
+
+read_configuration ./fixtures/config-prod1.ini
+
+#echo ${config[*]}
+
+
+echo "EMAIL TO :: " ${config["Email_email_to"]}
+
+echo "TEST_xxx :: " ${config[TEST_xxx]}
+echo "TEST_zzz :: " ${config[TEST_zzz]}
+echo "TEST_ttt :: " ${config[TEST_ttt]}
