@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -e
+
+source ../utilities
+
+source ../base
+
+initargs a b c
+
+initcommands a b c
+
+run $@
