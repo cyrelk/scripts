@@ -22,6 +22,22 @@ start_user_container () {
     cgm movepid all $boxuser $$ && lxc-start -n $userbox -d
 }
 
+_usage () {
+    :
+}
+
+_initargs () {
+    :
+}
+
+_validateargs () {
+    :
+}
+
+_run () {
+    :
+}
+
 source ../base
 
 initargs a b c
