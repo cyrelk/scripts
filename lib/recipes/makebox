@@ -2,10 +2,8 @@
 
 set -e
 
-USER=$1
-CONTAINER=$2
-IP=$3 # address/mask
-GW=$4 # address
+source ../utilities
+
 NAMESERVER=$5
 
 CGM="/usr/bin/cgm"
@@ -15,44 +13,91 @@ SU="/bin/su"
 # LXC parameters
 #
 
+
 if ! grep $USER /etc/lxc/lxc-usernet > /dev/null 2>&1; then
     echo "$USER br0 10" >> /etc/lxc/lxc-usernet
 fi
 
-mkdir -p /home/${USER}/.cache/lxc
-mkdir -p /home/${USER}/.config/lxc
-mkdir -p /home/${USER}/.local/share/lxc/
+configure_user () {
+    mkdir -p /home/${USER}/.cache/lxc
+    mkdir -p /home/${USER}/.config/lxc
+    mkdir -p /home/${USER}/.local/share/lxc/
 
-if [ ! -f /home/${USER}/.config/lxc/default.conf ]; then
-cat > /home/${USER}/.config/lxc/default.conf <<EOF
+    if [ ! -f /home/${USER}/.config/lxc/default.conf ]; then
+        cat > /home/${USER}/.config/lxc/default.conf <<EOF
 lxc.network.type = veth
 lxc.network.link = br0
 lxc.network.flags = up
 #lxc.network.hwaddr = 00:16:3e:xx:xx:xx
-lxc.id_map = u 0 820896 65536
-lxc.id_map = g 0 820896 65536
+lxc.id_map = u 0 $subuid $subgid
+lxc.id_map = g 0 $subuid $subgid
 EOF
-fi
+    fi
+}
+
 
 #
 # Group creation
 #
 
-$CGM create all $CONTAINER
-$CGM chown all $CONTAINER $(/usr/bin/id -u $USER) $(/usr/bin/id -g $USER)
+# control groups belong to a user even if (s)he has many containers
+create_user_groups () {
+    local user=$1
+    $CGM create all $user
+    $CGM chown all $user $(/usr/bin/id -u $user) $(/usr/bin/id -g $user)
+}
+
 
 #
 # Container creation as the newly created user
 #
 
-command="cgm movepid all $CONTAINER $$; lxc-create ..."
-$SU -u mezzapp -c $command
+make_container () {
+    local user=$1
+    local userbox=$2
+    su - $user
+    $CGM movepid all $user $$
+    lxc-create -n $userbox -t download -- -d debian -r jessie -a amd64
+}
 
-cat >> /home/${USER}/.local/share/lxc/${CONTAINER}/config <<EOF
-lxc.network.ipv4 = $IP
-lxc.network.ipv4.gateway = $GW
+configure_container () {
+    local user=$1
+    local userbox=$2
+    local ip=$3
+    local gw=$4
+    cat >> /home/${user}/.local/share/lxc/${userbox}/config <<EOF
+lxc.network.ipv4 = $ip
+lxc.network.ipv4.gateway = $gw
 EOF
+}
 
-# deletion of the dhclient from the container
-# lxc-nsuserexec echo|cat|whatever /home/$USER...
-# if root does that lxc-userrnsexec is not necessary
+configure_inside_container () {
+    # deletion of the dhclient from the container
+    # lxc-usernsexec echo|cat|whatever /home/$USER...
+    # if root does that lxc-userrnsexec is not necessary
+    :
+}
+
+_usage () {
+    :
+}
+
+_initargs () {
+    :
+}
+
+_validateargs () {
+    :
+}
+
+_run () {
+    :
+}
+
+source ../base
+
+initargs a b c
+
+initcommands a b c
+
+run $@

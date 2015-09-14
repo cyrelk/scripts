@@ -11,7 +11,7 @@ enable_unprivileged_containers () {
 }
 
 # per user
-create_users_groups () {
+create_all_users_groups () {
     cgm create all $boxuser
     cgm chown all $boxuser $(id -u $boxuser) $(id -g $boxuser)
 }
