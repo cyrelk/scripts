@@ -1,10 +1,14 @@
 #!/bin/bash
 
+__DEBUG__=1
+
 set -e
 
-source ../utilities
+SCRIPTDIR=$(dirname $0)
 
-source ./cgroups_utils
+source $SCRIPTDIR/../utilities
+
+source $SCRIPTDIR/cgroups_utils
 
 start_user_container () {
     local user=$1
@@ -14,31 +18,69 @@ start_user_container () {
        -c "cgm movepid all $user $$ && lxc-start -n $box -d"
 }
 
-main () {
+startbox () {
+    local user=$1
+    local box=$2
+
+    echo " -- starting ${user}'s box ${box}"
+
     enable_unprivileged_containers
     create_user_groups $user
     start_user_container $user $box
 }
 
+stopbox () {
+    echo " -- stopping ${user}'s box ${box}"
+}
+
+status () {
+    local user=$1
+    local box=$2
+
+    echo " -- status of ${user}'s box ${box}"
+}
+
+main () {
+    if $_start; then
+        startbox $user $box
+    fi
+
+    if $_stop; then
+        stopbox $user $box
+    fi
+
+    if $_status; then
+        status $user $box
+    fi
+}
+
+
 _usage () {
-    :
+    cat <<EOF
+
+$(basename $0) start|stop|status --user=... --box=...
+
+The Mezzapp user's LXC container controller script.
+
+EOF
 }
 
 _initargs () {
-    :
+    user=""
+    box=""
 }
 
 _validateargs () {
-    :
+    echo $user $box $_status
 }
 
 _run () {
-    :
+    main
 }
 
-source ../base
+source $SCRIPTDIR/../base
 
-initargs user box
+initargs help user: box:
 
 initcommands start stop status
 
