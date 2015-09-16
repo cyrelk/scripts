@@ -1,0 +1,45 @@
+#!/bin/bash
+
+set -e
+
+source ../utilities
+
+source ./cgroups_utils
+
+start_user_container () {
+    local user=$1
+    local box=$2
+
+    su - $user \
+       -c "cgm movepid all $user $$ && lxc-start -n $box -d"
+}
+
+main () {
+    enable_unprivileged_containers
+    create_user_groups $user
+    start_user_container $user $box
+}
+
+_usage () {
+    :
+}
+
+_initargs () {
+    :
+}
+
+_validateargs () {
+    :
+}
+
+_run () {
+    :
+}
+
+source ../base
+
+initargs user box
+
+initcommands start stop status
+
+run $@
