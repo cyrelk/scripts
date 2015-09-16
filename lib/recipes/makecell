@@ -21,6 +21,22 @@ configure_lxc () {
     cat "cgroup  /sys/fs/cgroup  cgroup  defaults  0  0" >> /etc/fstab
 }
 
+_usage () {
+    :
+}
+
+_initargs () {
+    :
+}
+
+_validateargs () {
+    :
+}
+
+_run () {
+    :
+}
+
 source ../base
 
 initargs a b c

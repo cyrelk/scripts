@@ -4,7 +4,7 @@ set -e
 
 source ../utilities
 
-NAMESERVER=$5
+source ./cgroups_utils
 
 CGM="/usr/bin/cgm"
 SU="/bin/su"
@@ -33,18 +33,6 @@ lxc.id_map = u 0 $subuid $subgid
 lxc.id_map = g 0 $subuid $subgid
 EOF
     fi
-}
-
-
-#
-# Group creation
-#
-
-# control groups belong to a user even if (s)he has many containers
-create_user_groups () {
-    local user=$1
-    $CGM create all $user
-    $CGM chown all $user $(/usr/bin/id -u $user) $(/usr/bin/id -g $user)
 }
 
 
