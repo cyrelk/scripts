@@ -1,12 +1,24 @@
 # -*- mode: shell-script -*-
 
 enable_unprivileged_containers () {
+    debug "  enable_unprivileged_containers"
+
     echo 1 > /sys/fs/cgroup/cpuset/cgroup.clone_children
     sysctl -w kernel.unprivileged_userns_clone=1
 }
 
 create_user_groups () {
+    debug "  create_user_groups $1"
+
     local boxuser=$1
     cgm create all $boxuser
     cgm chown all $boxuser $(id -u $boxuser) $(id -g $boxuser)
+}
+
+validate_box () {
+    debug "  validate_box $1 $2"
+
+    local user=$1
+    local box=$2
+
 }
