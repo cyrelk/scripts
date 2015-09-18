@@ -103,6 +103,10 @@ print_banner() {
 
 
 #
+# .ini configuration files routines
+#
+
+#
 # a routine able to parse .ini configuration files
 #
 #  to use it source it inside the client script then
@@ -176,6 +180,10 @@ validate_configuration () {
     done
 }
 
+#
+# Hosts, domains and services management routines
+#
+
 # verifies that all the hosts used by the script are available
 #  we can use ping only because the Debian bash version does not
 #  support /dev/tcp/* and /dev/udp/* files.
@@ -229,6 +237,48 @@ push_and_run () {
     scp -p $command $host:/tmp/${command}
     ssh $host "sudo /tmp/${command}"
     ssh $host "rm -f /tmp/${command}"
+}
+
+validate_domain () {
+    echo "  validate_domain $1"
+    local domainname=$1
+
+    set +e
+
+    /usr/bin/host ${domainname} > /dev/null 2>&1
+
+    if [ "$?" = "1" ]; then
+        debug "domain does not exist";
+        return 1
+    fi
+
+    set -e
+
+    debug "domain already exists"
+    return 0
+}
+
+#
+# User management routines
+#
+
+validate_user () {
+    debug "  validate_user $1"
+    local user=$1
+
+    set +e
+
+    /usr/bin/id ${user} > /dev/null 2>&1
+
+    if [ "$?" = "1" ]; then
+        debug "user does not exist";
+        return 1
+    fi
+
+    set -e
+
+    debug "user already exists"
+    return 0
 }
 
 return 0
