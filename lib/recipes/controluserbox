@@ -7,8 +7,11 @@ set -e
 SCRIPTDIR=$(dirname $0)
 
 source $SCRIPTDIR/../utilities
-
 source $SCRIPTDIR/cgroups_utils
+
+#
+# LXC management routines
+#
 
 start_user_container () {
     local user=$1
@@ -40,20 +43,10 @@ status () {
     echo " -- status of ${user}'s box ${box}"
 }
 
-main () {
-    if $_start; then
-        startbox $user $box
-    fi
 
-    if $_stop; then
-        stopbox $user $box
-    fi
-
-    if $_status; then
-        status $user $box
-    fi
-}
-
+#
+# framework callable routines
+#
 
 _usage () {
     cat <<EOF
@@ -66,22 +59,37 @@ EOF
 }
 
 _initargs () {
+    _start=0
+    _stop=0
+    _status=0
+
     user=""
     box=""
+    help=0
+    syslog=0
 }
 
 _validateargs () {
-    echo $user $box $_status
+    echo $ARGC $user $box $_status
 }
 
 _run () {
-    main
+    if [ $_start = 1 ]; then
+        startbox $user $box
+    fi
+
+    if [ $_stop = 1 ]; then
+        stopbox $user $box
+    fi
+
+    if [ $_status = 1 ]; then
+        status $user $box
+    fi
 }
 
 source $SCRIPTDIR/../base
 
 initargs help user: box:
-
 initcommands start stop status
 
 run $@
