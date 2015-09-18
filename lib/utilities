@@ -281,4 +281,12 @@ validate_user () {
     return 0
 }
 
+user_home () {
+    debug "  user_home $1"
+    local user=$1
+
+    echo $(grep $user /etc/passwd | cut -d ':' -f 6)
+    return $?
+}
+
 return 0
