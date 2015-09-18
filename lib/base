@@ -38,6 +38,7 @@ usage () {
     _usage "$@"
 }
 
+ARGC=0                          # the number of arguments passed to the script
 CELOPTIONS=""
 declare -a CELVARS              # contains the names of the variables
 declare -a CELARGS              # contains the presence of ":" arguments
@@ -48,6 +49,8 @@ declare -a CELCMDS              # contains the name of the authorized commands
 initargs () {
     debug " - initargs: $# $@"
 
+    #  default values for arguments and commands, commands names start
+    # with an underscore. 1 the command will be executed , 0 otherwise.
     _initargs
 
     CELOPTIONS=""
@@ -108,8 +111,8 @@ _optarg () {
 #  all the options have their name given to variables with argument values.
 #  the command has its name given to a variable prefixed by '_'
 # *note*: two parameters are a little bit specific: --help and --syslog
-#  they are used like any other arguments but have special meaning in template
-#  I say that just to remember them :)
+#  they are created and used like any other arguments but have special meaning
+#  in template. I say that just to remember them :)
 parseargs () {
     debug " - parseargs"
 
@@ -153,7 +156,7 @@ parseargs () {
         shift
     done
 
-    if [ $help = 1 ]; then
+    if [ $ARGC = 0 -o $help = 1 ]; then
         usage
         exit 0
     fi
@@ -168,9 +171,9 @@ validateargs () {
 }
 
 run () {
+    ARGC=$#
 
     parseargs $@
-
     validateargs
 
     if [ -n "$syslog" -a $syslog = 1 ]; then
