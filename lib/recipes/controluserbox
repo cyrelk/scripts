@@ -7,40 +7,37 @@ set -e
 SCRIPTDIR=$(dirname $0)
 
 source $SCRIPTDIR/../utilities
-source $SCRIPTDIR/cgroups_utils
+source $SCRIPTDIR/containers
 
 #
-# LXC management routines
+# users' containers management routines
 #
 
-start_user_container () {
+start_box () {
     local user=$1
     local box=$2
 
-    su - $user \
-       -c "cgm movepid all $user $$ && lxc-start -n $box -d"
-}
-
-startbox () {
-    local user=$1
-    local box=$2
-
-    echo " -- starting ${user}'s box ${box}"
+    print_banner " -- starting ${user}'s box ${box}"
 
     enable_unprivileged_containers
     create_user_groups $user
     start_user_container $user $box
 }
 
-stopbox () {
-    echo " -- stopping ${user}'s box ${box}"
-}
-
-status () {
+stop_box () {
     local user=$1
     local box=$2
 
-    echo " -- status of ${user}'s box ${box}"
+    print_banner " -- stopping ${user}'s box ${box}"
+
+    stop_user_container $user $box
+}
+
+status_box () {
+    local user=$1
+    local box=$2
+
+    print_banner " -- status of ${user}'s box ${box}"
 }
 
 
@@ -54,6 +51,16 @@ _usage () {
 $(basename $0) start|stop|status --user=... --box=...
 
 The Mezzapp user's LXC container controller script.
+
+where 'start' starts the users'box
+      'stop' stops the user's box
+      'status' returns the user's box status
+
+and where '--user' is given the name of an existing user
+    and '--box' is given the name of a container belonging
+    to the given user.
+
+both arguments are mandatory.
 
 EOF
 }
@@ -70,20 +77,43 @@ _initargs () {
 }
 
 _validateargs () {
-    echo $ARGC $user $box $_status
+    if [ $_start = 0 -a $_stop = 0 -a $_status = 0 ]; then
+        printf "\n\nParameters without command have no meaning.\n"
+        usage
+        exit 1
+    fi
+
+    if [  "$user" = "" -o "$box" = "" ]; then
+        printf "\n\nYou must give both --user and --box parameters.\n"
+        usage
+        exit 1
+    fi
+
+    if ! validate_user $user; then
+        printf "\n\nUser must be an existing Unix user on this cell.\n"
+        usage
+        exit 1
+    fi
+
+    if ! validate_container $user $box; then
+        printf "\n\nBox must belong to an existing Unix user on this cell.\n"
+        usage
+        exit 1
+    fi
+
 }
 
 _run () {
     if [ $_start = 1 ]; then
-        startbox $user $box
+        start_box $user $box
     fi
 
     if [ $_stop = 1 ]; then
-        stopbox $user $box
+        stop_box $user $box
     fi
 
     if [ $_status = 1 ]; then
-        status $user $box
+        status_box $user $box
     fi
 }
 
