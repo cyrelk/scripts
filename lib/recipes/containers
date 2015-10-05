@@ -23,6 +23,13 @@ enable_unprivileged_containers () {
     /sbin/sysctl -w kernel.unprivileged_userns_clone=1
 }
 
+disable_unprivileged_containers () {
+    debug "  disable_unprivileged_containers"
+
+    echo 0 > /sys/fs/cgroup/cpuset/cgroup.clone_children
+    /sbin/sysctl -w kernel.unprivileged_userns_clone=0
+}
+
 # create the user's control groups if they are not existing yet
 create_user_groups () {
     local user=$1
