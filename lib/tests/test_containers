@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# WARNING almost all these tests need to be evaluate as root,
+#         do that inside an environment you are ready to trash.
+#         a KVM VM using snapshots is the next best thing...
+
+__DEBUG__=1
+
+source ../utilities
+source ../recipes/containers
+
+print_banner "Testing validate_container"
+validate_container cyril mybox
+
+print_banner "Testing enable_unprivileged_containers"
+enable_unprivileged_containers
