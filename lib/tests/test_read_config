@@ -2,13 +2,13 @@
 
 source ../utilities
 
-read_configuration ./fixtures/config-prod1.ini
+read_configuration ./fixtures/makeuser.ini
 
-#echo ${config[*]}
+print_banner "All configuration keys"
+echo ${config[*]}
 
-
-echo "EMAIL TO :: " ${config["Email_email_to"]}
-
-echo "TEST_xxx :: " ${config[TEST_xxx]}
-echo "TEST_zzz :: " ${config[TEST_zzz]}
-echo "TEST_ttt :: " ${config[TEST_ttt]}
+print_banner "Some individual configuration keys"
+echo "Global_SOURCE :: " ${config["Global_SOURCE"]}
+echo "Global_MYSQL_SERVER :: " ${config["Global_MYSQL_SERVER"]}
+echo "Global_PUBLIC_IP :: " ${config["Global_PUBLIC_IP"]}
+echo "Global_BACKUP_DIR :: " ${config["Global_BACKUP_DIR"]}
