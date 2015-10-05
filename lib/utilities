@@ -88,6 +88,18 @@ debug () {
     fi
 }
 
+assert () {
+    local expression=$1
+    local label=$2
+
+    echo -n "$label"
+    if test $expression; then
+        echo " assertion is valid"
+    else
+        echo " assertion is NOT valid"
+    fi
+}
+
 _print_separator() {
     echo -e $White
     for i in $(seq ${#1}); do echo -n "="; done;
