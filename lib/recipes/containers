@@ -1,5 +1,12 @@
 # -*- mode: shell-script -*-
 
+_exec_as_user () {
+    local user=$1
+    local command=$2
+
+    su - $user -c "$command"
+}
+
 validate_container () {
     debug "  validate_box $1 $2"
 
@@ -25,18 +32,79 @@ create_user_groups () {
     cgm chown all $user $(id -u $user) $(id -g $user)
 }
 
+create_user_lxc_folders () {
+    debug "  create_user_lxc_folders"
+
+    local user=$1
+
+    mkdir -p /home/${user}/.cache/lxc
+    mkdir -p /home/${user}/.config/lxc
+    mkdir -p /home/${user}/.local/share/lxc
+
+    for folder in .cache .config .local; do
+        chown -R $user:$user $folder
+    done
+}
+
+create_user_lxc_default_config () {
+    local user=1
+    local id_map=$2
+
+    cat > /home${user}/.config/lxc/default.conf <<EOF
+lxc.network.type = veth
+lxc.network.link = br0
+lxc.network.flags = up
+lxc.id_map = u 0 $id_map
+lxc.id_map = g 0 $id_map
+EOF
+
+    chown $user:$user /home${user}/.config/lxc/default.conf
+}
+
+create_user_container_config () {
+    local user=$1
+    local box=$2
+    local boxip=$3
+    local netmask=$4
+    local gateway=$5
+
+    # TODO: compete all necessary container's parameters
+    cat >> /home/${user].local/share/lxc/${box}/config <<EOF
+lxc.network.ipv4 = ${boxip}/${netmask}
+lxc.network.ipv4.gateway = ${gateway}
+EOF
+}
+
+adjust_internal_container_config () {
+    local user=$1
+    local box=$2
+    :
+
+    # TODO: fix every necessary bit that's not set in the default image
+    #       network is the first thing that comes to mind
+}
+
+create_user_container () {
+    local user=$1
+    local box=$2
+
+    _exec_as_user $user \
+                  "cgm movepid all $user $$ && lxc-create -n $box -t download -- -d debian -r wheezy -a amd64"
+
+}
+
 start_user_container () {
     local user=$1
     local box=$2
 
-    su - $user \
-       -c "cgm movepid all $user $$ && lxc-start -n $box -d"
+    _exec_as_user $user \
+                  "cgm movepid all $user $$ && lxc-start -n $box -d"
 }
 
 stop_user_container () {
     local user=$1
     local box=$2
 
-    su - $user \
-       -c "cgm movepid all $user $$ && lxc-stop -n $box"
+    _exec_as_user $user \
+                  "cgm movepid all $user $$ && lxc-stop -n $box"
 }
