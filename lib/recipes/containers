@@ -8,10 +8,10 @@ _exec_as_user () {
 }
 
 validate_container () {
-    debug "  validate_box $1 $2"
-
     local user=$1
     local box=$2
+
+    debug "  validate_container $user $box"
 
     return 0
 }
@@ -20,14 +20,15 @@ enable_unprivileged_containers () {
     debug "  enable_unprivileged_containers"
 
     echo 1 > /sys/fs/cgroup/cpuset/cgroup.clone_children
-    sysctl -w kernel.unprivileged_userns_clone=1
+    /sbin/sysctl -w kernel.unprivileged_userns_clone=1
 }
 
 # create the user's control groups if they are not existing yet
 create_user_groups () {
-    debug "  create_user_groups $1"
-
     local user=$1
+
+    debug "  create_user_groups $user"
+
     cgm create all $user
     cgm chown all $user $(id -u $user) $(id -g $user)
 }
@@ -68,8 +69,9 @@ create_user_container_config () {
     local netmask=$4
     local gateway=$5
 
-    # TODO: compete all necessary container's parameters
-    cat >> /home/${user].local/share/lxc/${box}/config <<EOF
+    # TODO: complete all necessary container's parameters
+    box_config=/home/${user}/.local/share/lxc/${box}/config
+    cat >> $box_config <<EOF
 lxc.network.ipv4 = ${boxip}/${netmask}
 lxc.network.ipv4.gateway = ${gateway}
 EOF
