@@ -14,7 +14,6 @@ validate_container cyril mybox
 
 print_banner "Testing enable_unprivileged_containers"
 enable_unprivileged_containers
-
 assert "$(/sbin/sysctl -n kernel.unprivileged_userns_clone) = 1" \
        "kernel.unprivileged_userns_clone = 1"
 
