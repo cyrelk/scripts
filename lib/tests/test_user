@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# tests for the users' routines
+
+__DEBUG__=1
+
+source ../utilities
+
+print_banner "Test user's existence"
+
+echo $(validate_user root) $?
+
+echo $(validate_user) $?
+
+echo $(validate_user dontexist) $?
+
+echo $(user_home root) $?
+
+echo $(user_home) $?
