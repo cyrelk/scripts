@@ -1,8 +1,11 @@
 #!/bin/bash
 
 # tests for the users' routines
+# 'boxuser' should be an unprivileged user on the test machine
 
 __DEBUG__=1
+
+USER=boxuser
 
 source ../utilities
 
@@ -17,3 +20,7 @@ echo $(validate_user dontexist) $?
 echo $(user_home root) $?
 
 echo $(user_home) $?
+
+echo $(user_subuids boxuser)
+
+echo $(user_subgids boxuser)
