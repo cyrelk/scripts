@@ -311,8 +311,24 @@ user_home () {
     return 1
 }
 
-user_subids () {
+_subids_map () {
+    local user=$1
+    local map=$2
+
+    ids=$(grep $user $map)
+    echo ${ids#*:}|tr : ' '
+}
+
+user_subuids () {
     local user=$1
     debug "  user_subuids $user"
 
-return 0
+    echo $(_subids_map $user /etc/subuid)
+}
+
+user_subgids () {
+    local user=$1
+    debug "  user_subgids $user"
+
+    echo $(_subids_map $user /etc/subgid)
+}
