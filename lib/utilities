@@ -252,8 +252,8 @@ push_and_run () {
 }
 
 validate_domain () {
-    echo "  validate_domain $1"
     local domainname=$1
+    echo "  validate_domain $domainname"
 
     set +e
 
@@ -275,15 +275,22 @@ validate_domain () {
 #
 
 validate_user () {
-    debug "  validate_user $1"
     local user=$1
+    debug "  validate_user $user"
 
     set +e
+
+    if [ -z "$user" ]; then
+        debug "user parameter not given";
+        set -e
+        return 1
+    fi
 
     /usr/bin/id ${user} > /dev/null 2>&1
 
     if [ "$?" = "1" ]; then
         debug "user does not exist";
+        set -e
         return 1
     fi
 
@@ -294,11 +301,18 @@ validate_user () {
 }
 
 user_home () {
-    debug "  user_home $1"
     local user=$1
+    debug "  user_home $user"
 
-    echo $(grep $user /etc/passwd | cut -d ':' -f 6)
-    return $?
+    if [ -n "$user" ]; then
+        echo $(grep $user /etc/passwd | cut -d ':' -f 6)
+        return $?
+    fi
+    return 1
 }
+
+user_subids () {
+    local user=$1
+    debug "  user_subuids $user"
 
 return 0
