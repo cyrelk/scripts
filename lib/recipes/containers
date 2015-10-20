@@ -84,14 +84,18 @@ create_user_lxc_default_config () {
 
     if validate_user $user; then
         home=$(user_home $user)
-        id_map=$(user_subids $user)
+        uid_map=$(user_subuids $user)
+        gid_map=$(user_subgids $user)
+
+        echo $home $uid_map $gid_map
+        return 0
 
         cat > ${home}/.config/lxc/default.conf <<EOF
 lxc.network.type = veth
 lxc.network.link = br0
 lxc.network.flags = up
-lxc.id_map = u 0 $id_map
-lxc.id_map = g 0 $id_map
+lxc.id_map = u 0 $uid_map
+lxc.id_map = g 0 $gid_map
 EOF
 
         chown $user:$user ${home}/.config/lxc/default.conf
