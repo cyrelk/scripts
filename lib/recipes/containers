@@ -13,7 +13,10 @@ validate_container () {
 
     debug "  validate_container $user $box"
 
-    return 0
+    if validate_user $user; then
+        return 0
+    fi
+    return 1;
 }
 
 enable_unprivileged_containers () {
@@ -31,34 +34,59 @@ disable_unprivileged_containers () {
 }
 
 # create the user's control groups if they are not existing yet
-create_user_groups () {
+create_user_cgroups () {
     local user=$1
 
-    debug "  create_user_groups $user"
+    debug "  create_user_cgroups for $user"
 
-    cgm create all $user
-    cgm chown all $user $(id -u $user) $(id -g $user)
+    if validate_user $user; then
+        cgm create all $user
+        cgm chown all $user $(id -u $user) $(id -g $user)
+        return $?
+    fi
+    return 1
+}
+
+destroy_user_cgroups () {
+    local user=$1
+
+    debug "  destroy_user_cgroups for $user"
+
+    if validate_user $user; then
+        cgm remove all $user
+        return $?
+    fi
+    return 1
 }
 
 create_user_lxc_folders () {
-    debug "  create_user_lxc_folders"
-
     local user=$1
 
-    mkdir -p /home/${user}/.cache/lxc
-    mkdir -p /home/${user}/.config/lxc
-    mkdir -p /home/${user}/.local/share/lxc
+    debug "  create_user_lxc_folders for user $user"
 
-    for folder in .cache .config .local; do
-        chown -R $user:$user $folder
-    done
+    if validate_user $user; then
+        home=$(user_home $user)
+
+        mkdir -p ${home}/.cache/lxc
+        mkdir -p ${home}/.config/lxc
+        mkdir -p ${home}/.local/share/lxc
+
+        for folder in .cache .config .local; do
+            chown -R $user:$user ${home}/${folder}
+        done
+        return 0
+    fi
+    return 1
 }
 
 create_user_lxc_default_config () {
-    local user=1
-    local id_map=$2
+    local user=$1
 
-    cat > /home${user}/.config/lxc/default.conf <<EOF
+    if validate_user $user; then
+        home=$(user_home $user)
+        id_map=$(user_subids $user)
+
+        cat > ${home}/.config/lxc/default.conf <<EOF
 lxc.network.type = veth
 lxc.network.link = br0
 lxc.network.flags = up
@@ -66,7 +94,10 @@ lxc.id_map = u 0 $id_map
 lxc.id_map = g 0 $id_map
 EOF
 
-    chown $user:$user /home${user}/.config/lxc/default.conf
+        chown $user:$user ${home}/.config/lxc/default.conf
+        return 0
+    fi
+    return 1
 }
 
 create_user_container_config () {
