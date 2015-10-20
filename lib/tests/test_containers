@@ -33,7 +33,7 @@ print_banner "Creating User's LXC folders"
 create_user_lxc_folders $USER
 
 print_banner "Creating User's default container configuration"
-#create_user_lxc_default_config $USER
+create_user_lxc_default_config $USER
 
 print_banner "Destroying user cgroups"
 destroy_user_cgroups $USER
