@@ -21,6 +21,8 @@ echo $(user_home root) $?
 
 echo $(user_home) $?
 
-echo $(user_subuids boxuser)
+echo $(user_home $USER) $?
 
-echo $(user_subgids boxuser)
+echo $(user_subuids $USER)
+
+echo $(user_subgids $USER)
