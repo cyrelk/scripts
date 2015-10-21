@@ -82,9 +82,11 @@ On_IWhite='\e[0;107m'   # White
 #
 
 
+# FIXME: echo messes with the return values of the routines
 debug () {
+    return 0
     if [ -n "$__DEBUG__" ]; then
-        echo $@
+        echo "$@" >>2
     fi
 }
 
