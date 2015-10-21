@@ -65,7 +65,7 @@ create_user_lxc_folders () {
     debug "  create_user_lxc_folders for user $user"
 
     if validate_user $user; then
-        home=$(user_home $user)
+        local home=$(user_home $user)
 
         mkdir -p ${home}/.cache/lxc
         mkdir -p ${home}/.config/lxc
@@ -83,12 +83,9 @@ create_user_lxc_default_config () {
     local user=$1
 
     if validate_user $user; then
-        home=$(user_home $user)
-        uid_map=$(user_subuids $user)
-        gid_map=$(user_subgids $user)
-
-        echo $home $uid_map $gid_map
-        return 0
+        local home=$(user_home $user)
+        local uid_map=$(user_subuids $user)
+        local gid_map=$(user_subgids $user)
 
         cat > ${home}/.config/lxc/default.conf <<EOF
 lxc.network.type = veth
@@ -112,11 +109,16 @@ create_user_container_config () {
     local gateway=$5
 
     # TODO: complete all necessary container's parameters
-    box_config=/home/${user}/.local/share/lxc/${box}/config
-    cat >> $box_config <<EOF
+    if validate_user $user; then
+        local home=$(user_home $user)
+        local box_config=${home}/.local/share/lxc/${box}/config
+        cat >> $box_config <<EOF
 lxc.network.ipv4 = ${boxip}/${netmask}
 lxc.network.ipv4.gateway = ${gateway}
 EOF
+        return 0
+    fi
+    return 1
 }
 
 adjust_internal_container_config () {
