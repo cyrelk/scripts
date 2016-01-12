@@ -4,7 +4,7 @@ _exec_as_user () {
     local user=$1
     local command=$2
 
-    su - $user -c "$command"
+    su - $user --shell /bin/bash --command "$command"
 }
 
 validate_container () {
